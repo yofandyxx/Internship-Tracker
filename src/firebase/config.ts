@@ -5,12 +5,12 @@ import { initializeApp } from "firebase/app";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCvBXE18KleZZ-PC0ywivNPPBQmnE8Bc1Y",
-  authDomain: "ppnp-internship-tracker.firebaseapp.com",
-  projectId: "ppnp-internship-tracker",
-  storageBucket: "ppnp-internship-tracker.firebasestorage.app",
-  messagingSenderId: "723622478532",
-  appId: "1:723622478532:web:3e85b8484605f39c2bbf91"
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
 };
 
 // Initialize Firebase
