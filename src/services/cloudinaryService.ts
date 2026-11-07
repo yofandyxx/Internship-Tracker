@@ -1,8 +1,8 @@
 // Layanan upload ke Cloudinary (unsigned upload via Upload API)
 // Dokumentasi: https://cloudinary.com/documentation/upload_images#unsigned_upload
 
-const CLOUD_NAME = 'q540iwwj';            // ← Ganti dengan cloud name Anda
-const UPLOAD_PRESET = 'ppnp_unsigned';   // ← Ganti dengan preset name Anda
+const CLOUD_NAME = '';            // ← Ganti dengan cloud name Anda
+const UPLOAD_PRESET = '';   // ← Ganti dengan preset name Anda
 const FOLDER = 'ppnp-internship';
 
 export interface CloudinaryUploadResult {
