@@ -1,0 +1,91 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function roleIs(role) {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function isAdminOrSupervisor() {
+      return roleIs('admin') || roleIs('supervisor');
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdminOrSupervisor());
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status;
+      allow create, delete: if roleIs('admin');
+    }
+
+    match /dailyLogs/{logId} {
+      allow create: if signedIn()
+        && request.resource.data.studentId == request.auth.uid
+        && request.resource.data.reviewStatus == 'pending_review';
+      allow read: if signedIn()
+        && (resource.data.studentId == request.auth.uid || isAdminOrSupervisor());
+      allow update: if signedIn()
+        && ((resource.data.studentId == request.auth.uid
+             && resource.data.reviewStatus != 'approved')
+            || isAdminOrSupervisor());
+      allow delete: if signedIn()
+        && resource.data.studentId == request.auth.uid
+        && resource.data.reviewStatus != 'approved';
+    }
+
+    match /companies/{companyId} {
+      allow read: if signedIn();
+      allow create, update, delete: if roleIs('admin');
+    }
+
+    match /internshipApplications/{applicationId} {
+      allow create: if signedIn()
+        && request.resource.data.studentId == request.auth.uid;
+      allow read: if signedIn()
+        && (resource.data.studentId == request.auth.uid || isAdminOrSupervisor());
+      allow update: if roleIs('admin')
+        || (signedIn() && resource.data.studentId == request.auth.uid
+            && request.resource.data.studentId == resource.data.studentId
+            && request.resource.data.status == resource.data.status);
+      allow delete: if roleIs('admin');
+    }
+
+    match /internships/{internshipId} {
+      allow read: if signedIn()
+        && (resource.data.studentId == request.auth.uid
+            || resource.data.supervisorId == request.auth.uid
+            || roleIs('admin'));
+      allow create, update: if roleIs('admin');
+      allow delete: if roleIs('admin');
+    }
+
+    match /evaluations/{evaluationId} {
+      allow read: if signedIn()
+        && (resource.data.studentId == request.auth.uid
+            || resource.data.supervisorId == request.auth.uid
+            || roleIs('admin'));
+      allow create: if roleIs('supervisor')
+        && request.resource.data.supervisorId == request.auth.uid;
+      // Supervisor boleh mengubah draft atau melakukan transisi draft -> final.
+      // Identitas relasi evaluasi tidak boleh diubah oleh client.
+      allow update: if roleIs('admin')
+        || (signedIn()
+            && resource.data.supervisorId == request.auth.uid
+            && resource.data.isFinal == false
+            && request.resource.data.supervisorId == resource.data.supervisorId
+            && request.resource.data.studentId == resource.data.studentId
+            && request.resource.data.internshipId == resource.data.internshipId
+            && request.resource.data.isFinal in [false, true]);
+      allow delete: if roleIs('admin');
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
